@@ -1,0 +1,59 @@
+services:
+  # ============================================
+  # Nuxt 4 - Development (с hot-reload)
+  # ============================================
+  app-dev:
+    build:
+      context: .
+      target: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - DATABASE_URL=postgresql://nuxt_user:password123@postgres:5432/nuxt4
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - dev
+
+  # ============================================
+  # Nuxt 4 - Production
+  # ============================================
+  app-prod:
+    build:
+      context: .
+      target: production
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://nuxt_user:password123@postgres:5432/nuxt4
+    depends_on:
+      - postgres
+    profiles:
+      - prod
+
+  # ============================================
+  # PostgreSQL
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: nuxt4
+      POSTGRES_USER: nuxt_user
+      POSTGRES_PASSWORD: password123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nuxt_user -d nuxt4"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
